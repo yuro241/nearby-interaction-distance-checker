@@ -211,7 +211,7 @@ class ViewController: UIViewController, NISessionDelegate {
 
     func dataReceivedHandler(data: Data, peer: MCPeerID) {
         guard let discoveryToken = try? NSKeyedUnarchiver.unarchivedObject(ofClass: NIDiscoveryToken.self, from: data) else {
-            fatalError("Unexpectedly failed to encode discovery token.")
+            fatalError("Unexpectedly failed to decode discovery token.")
         }
         peerDidShareDiscoveryToken(peer: peer, token: discoveryToken)
     }

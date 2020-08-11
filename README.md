@@ -1,6 +1,6 @@
 # Implementing Interactions Between Users in Close Proximity
 
-Enable an iPhone to measure the relative position of other iPhones.
+Enable devices to access relative positioning information.
 
 ## Overview
 
@@ -8,5 +8,4 @@ Enable an iPhone to measure the relative position of other iPhones.
 
 ## Configure the Sample Code Project
 
-Before you run the sample code project in Xcode, set the run destination to an iPhone 11 or iOS Simulator. You can run the sample app on two iPhone 11 devices, 
-or on devices with a U1 chip. You can also run the sample app on multiple iOS Simulators.
+Before you run the sample code project in Xcode, set the run destination to a device with a U1 chip or iOS Simulator. You can run the sample app on two devices that have a U1 chip, or on multiple iOS Simulators.

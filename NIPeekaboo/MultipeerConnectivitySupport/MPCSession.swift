@@ -8,7 +8,7 @@ A class that manages peer discovery-token exchange over the local network by usi
 import Foundation
 import MultipeerConnectivity
 
-struct MPCSessionContants {
+struct MPCSessionConstants {
     static let kKeyIdentity: String = "identity"
 }
 
@@ -16,20 +16,20 @@ class MPCSession: NSObject, MCSessionDelegate, MCNearbyServiceBrowserDelegate, M
     var peerDataHandler: ((Data, MCPeerID) -> Void)?
     var peerConnectedHandler: ((MCPeerID) -> Void)?
     var peerDisconnectedHandler: ((MCPeerID) -> Void)?
-    private var serviceString: String!
-    private var mcSession: MCSession!
+    private let serviceString: String
+    private let mcSession: MCSession
     private let localPeerID = MCPeerID(displayName: UIDevice.current.name)
-    private var mcAdvertiser: MCNearbyServiceAdvertiser!
-    private var mcBrowser: MCNearbyServiceBrowser!
-    private var identityString: String!
-    private var maxNumPeers: Int!
+    private let mcAdvertiser: MCNearbyServiceAdvertiser
+    private let mcBrowser: MCNearbyServiceBrowser
+    private let identityString: String
+    private let maxNumPeers: Int
 
     init(service: String, identity: String, maxPeers: Int) {
         serviceString = service
         identityString = identity
         mcSession = MCSession(peer: localPeerID, securityIdentity: nil, encryptionPreference: .required)
         mcAdvertiser = MCNearbyServiceAdvertiser(peer: localPeerID,
-                                                 discoveryInfo: [MPCSessionContants.kKeyIdentity: identityString],
+                                                 discoveryInfo: [MPCSessionConstants.kKeyIdentity: identityString],
                                                  serviceType: serviceString)
         mcBrowser = MCNearbyServiceBrowser(peer: localPeerID, serviceType: serviceString)
         maxNumPeers = maxPeers
@@ -135,8 +135,7 @@ class MPCSession: NSObject, MCSessionDelegate, MCNearbyServiceBrowserDelegate, M
 
     // MARK: - MCNearbyServiceBrowserDelegate
     internal func browser(_ browser: MCNearbyServiceBrowser, foundPeer peerID: MCPeerID, withDiscoveryInfo info: [String: String]?) {
-        if info == nil { return }
-        guard let identityValue = info![MPCSessionContants.kKeyIdentity] else {
+        guard let identityValue = info?[MPCSessionConstants.kKeyIdentity] else {
             return
         }
         if identityValue == identityString && mcSession.connectedPeers.count < maxNumPeers {

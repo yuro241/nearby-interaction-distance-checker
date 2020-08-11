@@ -15,7 +15,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         if !NISession.isSupported {
-            print("supported device")
+            print("unsupported device")
             // Ensure that the device supports NearbyInteraction and present
             //  an error-message view controller, if not.
             let storyboard = UIStoryboard(name: "Main", bundle: nil)
