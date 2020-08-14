@@ -206,6 +206,7 @@ class ViewController: UIViewController, NISessionDelegate {
     func disconnectedFromPeer(peer: MCPeerID) {
         if connectedPeer == peer {
             connectedPeer = nil
+            sharedTokenWithPeer = false
         }
     }
 
