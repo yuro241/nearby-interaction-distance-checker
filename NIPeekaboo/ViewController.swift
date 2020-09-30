@@ -32,11 +32,21 @@ class ViewController: UIViewController, NISessionDelegate {
         case closeUpInFOV, notCloseUpInFOV, outOfFOV, unknown
     }
     
+    enum SonorState {
+        case red, yellow, green, none
+    }
+    
     // MARK: - Class variables
     var session: NISession?
     var peerDiscoveryToken: NIDiscoveryToken?
     let impactGenerator = UIImpactFeedbackGenerator(style: .medium)
+    let circleLayer = CAShapeLayer()
     var currentDistanceDirectionState: DistanceDirectionState = .unknown
+    var currentSonorState: SonorState = .none {
+        didSet {
+            updateSonorView()
+        }
+    }
     var mpc: MPCSession?
     var connectedPeer: MCPeerID?
     var sharedTokenWithPeer = false
@@ -49,9 +59,66 @@ class ViewController: UIViewController, NISessionDelegate {
         monkeyLabel.text = "🙈"
         centerInformationLabel.alpha = 1.0
         detailContainer.alpha = 0.0
+        drawSonor()
         
         // Start the NISessions
         startup()
+    }
+    
+    func drawSonor() {
+        let path = UIBezierPath(arcCenter: CGPoint(x: view.bounds.width / 2, y: view.bounds.height / 2),
+                                radius: 100,
+                                startAngle: 0,
+                                endAngle: .pi * 2.0,
+                                clockwise: true
+        )
+        
+        let endPath =  UIBezierPath(arcCenter: CGPoint(x: view.bounds.width / 2, y: view.bounds.height / 2),
+                                    radius: view.bounds.width,
+                                    startAngle: 0,
+                                    endAngle: .pi * 2.0,
+                                    clockwise: true
+        )
+        
+        circleLayer.fillColor = #colorLiteral(red: 1, green: 1, blue: 1, alpha: 0).cgColor
+        circleLayer.path = path.cgPath
+        
+        view.layer.addSublayer(circleLayer)
+        
+        // Animate the Path
+        let pathAnimation = CABasicAnimation(keyPath: "path")
+        pathAnimation.fromValue = path.cgPath
+        pathAnimation.toValue = endPath.cgPath
+        
+        // Animate the alpha value
+        let alphaAnimation = CABasicAnimation(keyPath: "alpha")
+        alphaAnimation.fromValue = 0.8
+        alphaAnimation.toValue = 0
+        
+        // Run Path and Alpha animation simultaneously
+        let animationGroup = CAAnimationGroup()
+        animationGroup.beginTime = 0
+        animationGroup.animations = [pathAnimation, alphaAnimation]
+        animationGroup.duration = 1.88
+        animationGroup.repeatCount = .greatestFiniteMagnitude
+        animationGroup.isRemovedOnCompletion = false
+        animationGroup.fillMode = CAMediaTimingFillMode.forwards
+
+        // Add the animation to the layer.
+        circleLayer.add(animationGroup, forKey: "sonar")
+    }
+    
+    func updateSonorView() {
+        switch currentSonorState {
+        case .green:
+            circleLayer.strokeColor = #colorLiteral(red: 0.3411764801, green: 0.6235294342, blue: 0.1686274558, alpha: 1).cgColor
+        case .yellow:
+            circleLayer.strokeColor = #colorLiteral(red: 0.9529411793, green: 0.6862745285, blue: 0.1333333403, alpha: 1).cgColor
+        case .red:
+            circleLayer.strokeColor = #colorLiteral(red: 0.9156251231, green: 0.1568627506, blue: 0.07450980693, alpha: 1).cgColor
+        case .none:
+            circleLayer.strokeColor = #colorLiteral(red: 1, green: 1, blue: 1, alpha: 0).cgColor
+        }
     }
 
     func startup() {
@@ -80,6 +147,7 @@ class ViewController: UIViewController, NISessionDelegate {
             
             // Set display state.
             currentDistanceDirectionState = .unknown
+            currentSonorState = .none
         }
     }
 
@@ -101,6 +169,7 @@ class ViewController: UIViewController, NISessionDelegate {
 
         // Update the the state and visualizations.
         let nextState = getDistanceDirectionState(from: nearbyObjectUpdate)
+        updateSonorColorState(from: nearbyObjectUpdate)
         updateVisualization(from: currentDistanceDirectionState, to: nextState, with: nearbyObjectUpdate)
         currentDistanceDirectionState = nextState
     }
@@ -119,6 +188,7 @@ class ViewController: UIViewController, NISessionDelegate {
         }
 
         currentDistanceDirectionState = .unknown
+        currentSonorState = .none
 
         switch reason {
         case .peerEnded:
@@ -145,6 +215,7 @@ class ViewController: UIViewController, NISessionDelegate {
 
     func sessionWasSuspended(_ session: NISession) {
         currentDistanceDirectionState = .unknown
+        currentSonorState = .none
         updateInformationLabel(description: "Session suspended")
     }
 
@@ -160,6 +231,7 @@ class ViewController: UIViewController, NISessionDelegate {
 
     func session(_ session: NISession, didInvalidateWith error: Error) {
         currentDistanceDirectionState = .unknown
+        currentSonorState = .none
         
         // Session was invalidated, startup again to see if everything works.
         startup()
@@ -264,6 +336,28 @@ class ViewController: UIViewController, NISessionDelegate {
         }
 
         return .outOfFOV
+    }
+    
+    func updateSonorColorState(from nearbyObject: NINearbyObject) {
+        if nearbyObject.distance == nil && nearbyObject.direction == nil {
+            currentSonorState = .none
+            return
+        }
+
+        let isNearby = nearbyObject.distance.map(isNearby(_:)) ?? false
+        let directionAvailable = nearbyObject.direction != nil
+
+        if isNearby && directionAvailable {
+            currentSonorState = .red
+            return
+        }
+
+        if !isNearby && directionAvailable {
+            currentSonorState = .yellow
+            return
+        }
+
+        currentSonorState = .green
     }
 
     private func animate(from currentState: DistanceDirectionState, to nextState: DistanceDirectionState, with peer: NINearbyObject) {
