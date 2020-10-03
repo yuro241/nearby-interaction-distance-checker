@@ -41,6 +41,7 @@ class ViewController: UIViewController, NISessionDelegate {
     var peerDiscoveryToken: NIDiscoveryToken?
     let impactGenerator = UIImpactFeedbackGenerator(style: .medium)
     let circleLayer = CAShapeLayer()
+    let animationGroup = CAAnimationGroup()
     var currentDistanceDirectionState: DistanceDirectionState = .unknown
     var currentSonorState: SonorState = .none {
         didSet {
@@ -96,7 +97,6 @@ class ViewController: UIViewController, NISessionDelegate {
         alphaAnimation.toValue = 0
         
         // Run Path and Alpha animation simultaneously
-        let animationGroup = CAAnimationGroup()
         animationGroup.beginTime = 0
         animationGroup.animations = [pathAnimation, alphaAnimation]
         animationGroup.duration = 1.88
@@ -112,12 +112,16 @@ class ViewController: UIViewController, NISessionDelegate {
         switch currentSonorState {
         case .green:
             circleLayer.strokeColor = #colorLiteral(red: 0.3411764801, green: 0.6235294342, blue: 0.1686274558, alpha: 1).cgColor
+            animationGroup.duration = 1.88
         case .yellow:
             circleLayer.strokeColor = #colorLiteral(red: 0.9529411793, green: 0.6862745285, blue: 0.1333333403, alpha: 1).cgColor
+            animationGroup.duration = 1.23
         case .red:
             circleLayer.strokeColor = #colorLiteral(red: 0.9156251231, green: 0.1568627506, blue: 0.07450980693, alpha: 1).cgColor
+            animationGroup.duration =  0.92
         case .none:
             circleLayer.strokeColor = #colorLiteral(red: 1, green: 1, blue: 1, alpha: 0).cgColor
+            animationGroup.duration = 1.88
         }
     }
 
